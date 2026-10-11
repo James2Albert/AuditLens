@@ -1,0 +1,284 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1760 1050" width="1760" height="1050" font-family="Noto Sans, Segoe UI, Helvetica, Arial, sans-serif">
+  <title>AuditLens technical architecture</title>
+  <desc>People use a browser workbench or a command line. Both talk to the AuditLens server, which runs six steps: Detect with Slither, Understand with optional AI triage, Trace attack paths, Verify exploits in a Foundry sandbox, Fix and validate patches, and Prove with a hash-chained ledger, reports and re-executable proof bundles.</desc>
+  <defs>
+    <marker id="arw" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#4a5565"/></marker>
+    <marker id="arw-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#2563eb"/></marker>
+    <marker id="arw-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#15803d"/></marker>
+    <style>
+      .panel { fill: #e9ecf1; stroke: #c9cfd8; stroke-width: 1.5; }
+      .box { fill: #fff; stroke: #c3c9d3; stroke-width: 1.4; }
+      .h { font-size: 18px; font-weight: 700; fill: #1b2430; }
+      .ph { font-size: 19px; font-weight: 700; fill: #1b2430; }
+      .s { font-size: 14px; fill: #4a5565; }
+      .xs { font-size: 13px; fill: #4a5565; }
+      .code { font-family: "Noto Sans Mono", "DejaVu Sans Mono", Menlo, monospace; font-size: 12px; fill: #6b7685; }
+      .cmd { font-family: "Noto Sans Mono", "DejaVu Sans Mono", Menlo, monospace; font-size: 13px; fill: #1b2430; }
+      .lbl { font-size: 12.5px; font-weight: 600; fill: #1b2430; }
+      .line { stroke: #4a5565; stroke-width: 2; fill: none; }
+      .ico { fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    </style>
+    <!-- 24x24 line icons -->
+    <symbol id="i-user" viewBox="0 0 24 24"><g class="ico"><circle cx="12" cy="8" r="4"/><path d="M4 21v-1a6 6 0 0 1 6-6h4a6 6 0 0 1 6 6v1"/></g></symbol>
+    <symbol id="i-loop" viewBox="0 0 24 24"><g class="ico"><path d="M20 12a8 8 0 1 1-2.4-5.7L20 8.5"/><path d="M20 3.5v5h-5"/></g></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><g class="ico"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></g></symbol>
+    <symbol id="i-monitor" viewBox="0 0 24 24"><g class="ico"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></g></symbol>
+    <symbol id="i-term" viewBox="0 0 24 24"><g class="ico"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M12.5 15H17"/></g></symbol>
+    <symbol id="i-server" viewBox="0 0 24 24"><g class="ico"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/></g></symbol>
+    <symbol id="i-flow" viewBox="0 0 24 24"><g class="ico"><path d="M9 6h12M9 12h12M9 18h12"/><path d="M4 6h.01M4 12h.01M4 18h.01"/></g></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><g class="ico"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></g></symbol>
+    <symbol id="i-spark" viewBox="0 0 24 24"><g class="ico"><path d="M11 3l1.9 5.1L18 10l-5.1 1.9L11 17l-1.9-5.1L4 10l5.1-1.9z"/><path d="M18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></g></symbol>
+    <symbol id="i-graph" viewBox="0 0 24 24"><g class="ico"><circle cx="5" cy="6" r="2.5"/><circle cx="19" cy="6" r="2.5"/><circle cx="12" cy="18.5" r="2.5"/><path d="M7.5 6h9M6.3 8.2l4.4 8.1M17.7 8.2l-4.4 8.1"/></g></symbol>
+    <symbol id="i-flask" viewBox="0 0 24 24"><g class="ico"><path d="M9 3h6M10 3v6l-5.3 9.2A2 2 0 0 0 6.4 21h11.2a2 2 0 0 0 1.7-2.8L14 9V3"/><path d="M7.5 15h9"/></g></symbol>
+    <symbol id="i-wrench" viewBox="0 0 24 24"><g class="ico"><path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3.5 17.5l3 3 5.8-5.8a4 4 0 0 0 5.4-5.4l-2.6 2.6-2.4-.6-.6-2.4z"/></g></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><g class="ico"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M8.5 12l2.5 2.5 4.5-5"/></g></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><g class="ico"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></g></symbol>
+    <symbol id="i-db" viewBox="0 0 24 24"><g class="ico"><ellipse cx="12" cy="5.5" rx="8" ry="3"/><path d="M4 5.5v13c0 1.7 3.6 3 8 3s8-1.3 8-3v-13"/><path d="M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3"/></g></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><g class="ico"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></g></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><g class="ico"><path d="M7 19h10.5a4.5 4.5 0 0 0 .4-9A6.5 6.5 0 0 0 5.4 10.6 4.3 4.3 0 0 0 7 19z"/></g></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><g class="ico"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></g></symbol>
+  </defs>
+
+  <rect width="1760" height="1050" fill="#f4f5f7"/>
+
+  <!-- title -->
+  <text x="30" y="50" font-size="30" font-weight="700" fill="#1b2430">AuditLens  |  Technical Architecture</text>
+  <text x="30" y="82" class="s" font-size="15">How a smart contract moves through AuditLens:
+    <tspan font-weight="700" fill="#475569">Detect</tspan> →
+    <tspan font-weight="700" fill="#2563eb">Understand</tspan> →
+    <tspan font-weight="700" fill="#0d9488">Trace</tspan> →
+    <tspan font-weight="700" fill="#15803d">Verify</tspan> →
+    <tspan font-weight="700" fill="#7c3aed">Fix</tspan> →
+    <tspan font-weight="700" fill="#b45309">Prove</tspan>.
+    Built on Slither, which is used as-is through its Python API.</text>
+
+  <!-- ============ PEOPLE ============ -->
+  <rect x="30" y="110" width="230" height="580" rx="10" class="panel"/>
+  <use href="#i-user" x="46" y="124" width="22" height="22" style="color:#1b2430"/>
+  <text x="76" y="142" class="ph">People</text>
+
+  <rect x="44" y="160" width="202" height="160" rx="8" class="box"/>
+  <rect x="58" y="176" width="40" height="40" rx="9" fill="#eef2ff"/>
+  <use href="#i-user" x="66" y="184" width="24" height="24" style="color:#1e3a8a"/>
+  <text x="58" y="242" class="h" font-size="17">Auditor / developer</text>
+  <text x="58" y="266" class="xs">Uploads a contract,</text>
+  <text x="58" y="285" class="xs">reviews the evidence,</text>
+  <text x="58" y="304" class="xs">tries out a fix</text>
+
+  <rect x="44" y="336" width="202" height="160" rx="8" class="box"/>
+  <rect x="58" y="352" width="40" height="40" rx="9" fill="#eef2ff"/>
+  <use href="#i-loop" x="66" y="360" width="24" height="24" style="color:#1e3a8a"/>
+  <text x="58" y="418" class="h" font-size="17">CI pipeline</text>
+  <text x="58" y="442" class="xs">Re-runs every proven</text>
+  <text x="58" y="461" class="xs">exploit on each new</text>
+  <text x="58" y="480" class="xs">version; exit 1 = regression</text>
+
+  <rect x="44" y="512" width="202" height="164" rx="8" class="box"/>
+  <rect x="58" y="528" width="40" height="40" rx="9" fill="#eef2ff"/>
+  <use href="#i-eye" x="66" y="536" width="24" height="24" style="color:#1e3a8a"/>
+  <text x="58" y="594" class="h" font-size="17">Outside reviewer</text>
+  <text x="58" y="618" class="xs">Gets the proof bundle and</text>
+  <text x="58" y="637" class="xs">re-executes it. No need</text>
+  <text x="58" y="656" class="xs">to trust our report</text>
+
+  <!-- ============ INTERFACES ============ -->
+  <rect x="300" y="110" width="290" height="420" rx="10" class="panel"/>
+  <use href="#i-monitor" x="316" y="124" width="22" height="22" style="color:#1b2430"/>
+  <text x="346" y="142" class="ph">Web workbench</text>
+  <text x="316" y="166" class="code">frontend/ · plain JS, no build step</text>
+  <g class="s">
+    <rect x="314" y="180" width="262" height="34" rx="6" class="box"/><use href="#i-shield" x="326" y="188" width="18" height="18" style="color:#475569"/><text x="354" y="202">Overview &amp; security score</text>
+    <rect x="314" y="220" width="262" height="34" rx="6" class="box"/><use href="#i-search" x="326" y="228" width="18" height="18" style="color:#475569"/><text x="354" y="242">Findings, 3 evidence blocks</text>
+    <rect x="314" y="260" width="262" height="34" rx="6" class="box"/><use href="#i-graph" x="326" y="268" width="18" height="18" style="color:#475569"/><text x="354" y="282">Attack-path graph</text>
+    <rect x="314" y="300" width="262" height="34" rx="6" class="box"/><use href="#i-flask" x="326" y="308" width="18" height="18" style="color:#475569"/><text x="354" y="322">Verification &amp; drain chart</text>
+    <rect x="314" y="340" width="262" height="34" rx="6" class="box"/><use href="#i-wrench" x="326" y="348" width="18" height="18" style="color:#475569"/><text x="354" y="362">Remediation &amp; patch diff</text>
+    <rect x="314" y="380" width="262" height="34" rx="6" class="box"/><use href="#i-shield" x="326" y="388" width="18" height="18" style="color:#475569"/><text x="354" y="402">Report &amp; proof bundle</text>
+  </g>
+  <rect x="314" y="428" width="262" height="88" rx="7" fill="#fffbeb" stroke="#f2c46d" stroke-width="1.3"/>
+  <use href="#i-info" x="326" y="440" width="18" height="18" style="color:#b45309"/>
+  <text x="352" y="454" class="xs">Colour keeps fact, hypothesis</text>
+  <text x="352" y="473" class="xs">and proof visibly apart.</text>
+  <text x="352" y="492" class="xs">It only displays results;</text>
+  <text x="352" y="509" class="xs">all the work is server-side.</text>
+
+  <rect x="300" y="550" width="290" height="140" rx="10" class="panel"/>
+  <use href="#i-term" x="316" y="564" width="22" height="22" style="color:#1b2430"/>
+  <text x="346" y="582" class="ph">Command line</text>
+  <rect x="314" y="596" width="262" height="80" rx="6" fill="#ffffff" stroke="#c3c9d3"/>
+  <text x="326" y="619" class="cmd">auditlens</text><text x="410" y="619" class="code">starts the app</text>
+  <text x="326" y="642" class="cmd">auditlens verify-bundle</text>
+  <text x="326" y="664" class="cmd">auditlens recheck</text>
+
+  <!-- people -> interfaces -->
+  <path d="M246 240 C 272 240, 274 260, 298 260" class="line" marker-end="url(#arw)"/>
+  <path d="M246 416 C 276 416, 270 630, 298 630" class="line" marker-end="url(#arw)"/>
+  <path d="M246 594 C 270 594, 272 640, 298 640" class="line" marker-end="url(#arw)"/>
+
+  <!-- ============ SERVER ============ -->
+  <rect x="650" y="110" width="480" height="640" rx="10" class="panel"/>
+  <use href="#i-server" x="666" y="124" width="22" height="22" style="color:#1b2430"/>
+  <text x="696" y="142" class="ph">AuditLens server</text>
+  <text x="878" y="142" class="code" font-size="13">Python · FastAPI</text>
+
+  <rect x="666" y="158" width="448" height="62" rx="8" class="box"/>
+  <rect x="680" y="169" width="40" height="40" rx="9" fill="#1b2430"/>
+  <use href="#i-flow" x="688" y="177" width="24" height="24" style="color:#fff"/>
+  <text x="734" y="184" class="h" font-size="17">API + scan orchestrator</text>
+  <text x="734" y="206" class="xs">Takes uploads and runs the six steps below, in order</text>
+
+  <!-- step spine -->
+  <path d="M700 220 V 700" stroke="#9aa3b1" stroke-width="2" stroke-dasharray="4 4"/>
+
+  <!-- step rows: y = 238, 320, 402, 484, 566, 648 (h=72) -->
+  <g>
+    <rect x="666" y="236" width="448" height="72" rx="8" class="box"/>
+    <rect x="680" y="252" width="40" height="40" rx="9" fill="#475569"/>
+    <use href="#i-search" x="688" y="260" width="24" height="24" style="color:#fff"/>
+    <text x="734" y="260" class="h" font-size="17"><tspan fill="#475569">1 · Detect</tspan><tspan dx="10">Slither analysis</tspan></text>
+    <text x="734" y="281" class="xs">Runs every detector; pulls out each function's facts</text>
+    <text x="734" y="299" class="code">scanner/evidence.py</text>
+
+    <rect x="666" y="318" width="448" height="72" rx="8" class="box"/>
+    <rect x="680" y="334" width="40" height="40" rx="9" fill="#2563eb"/>
+    <use href="#i-spark" x="688" y="342" width="24" height="24" style="color:#fff"/>
+    <text x="734" y="342" class="h" font-size="17"><tspan fill="#2563eb">2 · Understand</tspan><tspan dx="10">AI triage</tspan></text>
+    <text x="734" y="363" class="xs">Rates how exploitable each finding is: a hypothesis</text>
+    <text x="734" y="381" class="code">ai/triage.py · ai/heuristic.py</text>
+
+    <rect x="666" y="400" width="448" height="72" rx="8" class="box"/>
+    <rect x="680" y="416" width="40" height="40" rx="9" fill="#0d9488"/>
+    <use href="#i-graph" x="688" y="424" width="24" height="24" style="color:#fff"/>
+    <text x="734" y="424" class="h" font-size="17"><tspan fill="#0d9488">3 · Trace</tspan><tspan dx="10">Attack-path graph</tspan></text>
+    <text x="734" y="445" class="xs">Links attacker → entry point → call → state change</text>
+    <text x="734" y="463" class="code">graph/ · NetworkX</text>
+
+    <rect x="666" y="482" width="448" height="72" rx="8" class="box"/>
+    <rect x="680" y="498" width="40" height="40" rx="9" fill="#15803d"/>
+    <use href="#i-flask" x="688" y="506" width="24" height="24" style="color:#fff"/>
+    <text x="734" y="506" class="h" font-size="17"><tspan fill="#15803d">4 · Verify</tspan><tspan dx="10">Exploit test</tspan></text>
+    <text x="734" y="527" class="xs">Fills a fixed test template and runs it in the sandbox</text>
+    <text x="734" y="545" class="code">verification/templates.py · runner.py</text>
+
+    <rect x="666" y="564" width="448" height="72" rx="8" class="box"/>
+    <rect x="680" y="580" width="40" height="40" rx="9" fill="#7c3aed"/>
+    <use href="#i-wrench" x="688" y="588" width="24" height="24" style="color:#fff"/>
+    <text x="734" y="588" class="h" font-size="17"><tspan fill="#7c3aed">5 · Fix</tspan><tspan dx="10">Patch &amp; validate</tspan></text>
+    <text x="734" y="609" class="xs">Re-runs the exploit and a normal-use test on the patch</text>
+    <text x="734" y="627" class="code">verification/patch.py</text>
+
+    <rect x="666" y="646" width="448" height="88" rx="8" class="box"/>
+    <rect x="680" y="662" width="40" height="40" rx="9" fill="#b45309"/>
+    <use href="#i-shield" x="688" y="670" width="24" height="24" style="color:#fff"/>
+    <text x="734" y="670" class="h" font-size="17"><tspan fill="#b45309">6 · Prove</tspan><tspan dx="10">Ledger, report, proof bundle</tspan></text>
+    <text x="734" y="691" class="xs">Hash-chains every result; packs sources, tests and</text>
+    <text x="734" y="709" class="xs">ledger into a bundle anyone can re-run</text>
+    <text x="734" y="726" class="code">ledger.py · bundle.py · reports/</text>
+  </g>
+
+  <!-- browser <-> server -->
+  <path d="M590 182 H 648" class="line" marker-end="url(#arw)"/>
+  <path d="M648 204 H 592" class="line" marker-end="url(#arw)"/>
+  <text x="619" y="173" class="lbl" text-anchor="middle">REST</text>
+  <text x="619" y="223" class="lbl" text-anchor="middle">JSON</text>
+  <!-- CLI -> prove (same code) -->
+  <path d="M590 653 C 625 653, 630 690, 664 690" class="line" stroke-dasharray="6 4" marker-end="url(#arw)"/>
+  <text x="310" y="712" class="xs" font-size="12">Dashed: same code, runs without the server</text>
+
+  <!-- ============ OUTSIDE PIECES ============ -->
+  <!-- Slither -->
+  <rect x="1270" y="110" width="460" height="132" rx="10" fill="#f1f5f9" stroke="#94a3b8" stroke-width="1.6"/>
+  <rect x="1286" y="126" width="40" height="40" rx="9" fill="#475569"/>
+  <use href="#i-layers" x="1294" y="134" width="24" height="24" style="color:#fff"/>
+  <text x="1340" y="144" class="h">Slither engine</text>
+  <text x="1340" y="164" class="xs">by Trail of Bits · the deterministic core</text>
+  <text x="1288" y="192" class="s">• compiles with solc via crytic-compile</text>
+  <text x="1288" y="214" class="s">• same contract in, same findings out</text>
+  <text x="1300" y="232" class="xs" fill="#6b7685">used unmodified, through its public Python API</text>
+
+  <!-- AI provider -->
+  <rect x="1270" y="262" width="460" height="152" rx="10" fill="#eff6ff" stroke="#2563eb" stroke-width="1.6" stroke-dasharray="7 5"/>
+  <rect x="1286" y="278" width="40" height="40" rx="9" fill="#2563eb"/>
+  <use href="#i-cloud" x="1294" y="286" width="24" height="24" style="color:#fff"/>
+  <text x="1340" y="296" class="h">AI model <tspan class="xs" font-weight="600" fill="#2563eb">OPTIONAL</tspan></text>
+  <text x="1340" y="316" class="xs">Anthropic · OpenAI · local (e.g. Ollama)</text>
+  <text x="1288" y="344" class="s">• gets Slither's evidence, answers in JSON</text>
+  <text x="1288" y="366" class="s">• answer is schema-checked; it can't run code</text>
+  <text x="1288" y="388" class="s">• no API key → offline rule-based heuristic,</text>
+  <text x="1300" y="406" class="s">clearly labelled as such</text>
+
+  <!-- Sandbox -->
+  <rect x="1270" y="434" width="460" height="190" rx="10" fill="#f0fdf4" stroke="#15803d" stroke-width="2.2"/>
+  <rect x="1286" y="450" width="40" height="40" rx="9" fill="#15803d"/>
+  <use href="#i-lock" x="1294" y="458" width="24" height="24" style="color:#fff"/>
+  <text x="1340" y="468" class="h">Exploit sandbox</text>
+  <text x="1340" y="488" class="xs">Foundry (forge) inside bubblewrap</text>
+  <text x="1288" y="516" class="s">• no network, cleared environment, no secrets</text>
+  <text x="1288" y="538" class="s">• 120 s timeout, CPU and file-size limits</text>
+  <text x="1288" y="560" class="s">• tests come from fixed templates; the AI</text>
+  <text x="1300" y="578" class="s">only fills in parameters, never code</text>
+  <text x="1288" y="600" class="s">• runs original and patched code side by side</text>
+
+  <!-- Storage -->
+  <rect x="1270" y="644" width="460" height="106" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="1.6"/>
+  <rect x="1286" y="660" width="40" height="40" rx="9" fill="#64748b"/>
+  <use href="#i-db" x="1294" y="668" width="24" height="24" style="color:#fff"/>
+  <text x="1340" y="678" class="h">Evidence storage</text>
+  <text x="1340" y="698" class="xs">SQLite auditlens.db + artifacts folder</text>
+  <text x="1288" y="724" class="s">• append-only, hash-chained ledger</text>
+  <text x="1288" y="744" class="s">• scans, tests, patches survive restarts</text>
+
+  <!-- server -> outside -->
+  <path d="M1114 268 C 1190 268, 1190 180, 1268 180" class="line" marker-end="url(#arw)"/>
+  <rect x="1150" y="206" width="86" height="22" rx="11" fill="#fff" stroke="#c3c9d3"/>
+  <text x="1193" y="222" class="lbl" text-anchor="middle">Python API</text>
+
+  <path d="M1114 354 C 1190 354, 1190 340, 1268 340" stroke="#2563eb" stroke-width="2" fill="none" stroke-dasharray="6 4" marker-end="url(#arw-blue)"/>
+  <rect x="1142" y="360" width="104" height="38" rx="8" fill="#fff" stroke="#bfd2f8"/>
+  <text x="1194" y="376" class="lbl" text-anchor="middle">facts in,</text>
+  <text x="1194" y="392" class="lbl" text-anchor="middle">opinion out</text>
+
+  <path d="M1114 518 C 1190 518, 1190 510, 1268 510" stroke="#15803d" stroke-width="2.2" fill="none" marker-end="url(#arw-green)"/>
+  <path d="M1114 600 C 1190 600, 1190 580, 1268 580" stroke="#15803d" stroke-width="2.2" fill="none" marker-end="url(#arw-green)"/>
+  <rect x="1142" y="530" width="104" height="38" rx="8" fill="#fff" stroke="#b7e0c3"/>
+  <text x="1194" y="546" class="lbl" text-anchor="middle">tests run</text>
+  <text x="1194" y="562" class="lbl" text-anchor="middle">here, isolated</text>
+
+  <path d="M1114 700 C 1190 700, 1190 700, 1268 700" class="line" marker-end="url(#arw)"/>
+  <rect x="1150" y="710" width="86" height="22" rx="11" fill="#fff" stroke="#c3c9d3"/>
+  <text x="1193" y="726" class="lbl" text-anchor="middle">every result</text>
+
+  <!-- ============ EVIDENCE BANNER ============ -->
+  <rect x="30" y="784" width="1700" height="226" rx="12" fill="#ffffff" stroke="#c3c9d3" stroke-width="1.5"/>
+  <use href="#i-shield" x="52" y="804" width="28" height="28" style="color:#1b2430"/>
+  <text x="92" y="826" class="ph">Four kinds of evidence, never mixed</text>
+  <text x="476" y="826" class="s">Every finding shows which of these it has, and the ledger records each one separately.</text>
+
+  <g>
+    <rect x="52" y="848" width="400" height="104" rx="9" fill="#f8fafc" stroke="#cbd5e1"/>
+    <rect x="52" y="848" width="6" height="104" rx="3" fill="#64748b"/>
+    <text x="74" y="878" class="h" font-size="17" fill="#475569">Static fact</text>
+    <text x="74" y="902" class="s">Slither reported it.</text>
+    <text x="74" y="922" class="s">Deterministic, but only a warning.</text>
+
+    <rect x="470" y="848" width="400" height="104" rx="9" fill="#f5f8ff" stroke="#c7d6f6"/>
+    <rect x="470" y="848" width="6" height="104" rx="3" fill="#2563eb"/>
+    <text x="492" y="878" class="h" font-size="17" fill="#2563eb">AI hypothesis</text>
+    <text x="492" y="902" class="s">An opinion on exploitability, with a</text>
+    <text x="492" y="922" class="s">confidence. Useful, never treated as proof.</text>
+
+    <rect x="888" y="848" width="400" height="104" rx="9" fill="#f3fbf5" stroke="#bfe3c9"/>
+    <rect x="888" y="848" width="6" height="104" rx="3" fill="#15803d"/>
+    <text x="910" y="878" class="h" font-size="17" fill="#15803d">Execution evidence</text>
+    <text x="910" y="902" class="s">An exploit test actually ran in the sandbox:</text>
+    <text x="910" y="922" class="s">run ID, hashes, measured balances.</text>
+
+    <rect x="1306" y="848" width="402" height="104" rx="9" fill="#f8f5ff" stroke="#d9cbf7"/>
+    <rect x="1306" y="848" width="6" height="104" rx="3" fill="#7c3aed"/>
+    <text x="1328" y="878" class="h" font-size="17" fill="#7c3aed">Remediation evidence</text>
+    <text x="1328" y="902" class="s">A patch blocked the same exploit and</text>
+    <text x="1328" y="922" class="s">kept normal use working.</text>
+  </g>
+
+  <text x="52" y="984" class="s" fill="#1b2430"><tspan font-weight="700">A finding is called proven only when an exploit test reproduced it.</tspan><tspan dx="10">Impact figures come from local test setups, not live chains.</tspan></text>
+  <text x="52" y="1002" class="xs" fill="#6b7685">The ledger detects edits to recorded evidence; it does not prove the tests were the right ones to write.</text>
+</svg>

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>AuditLens — Smart Contract Security</title>
+  <script>
+    /* Resolve the theme before first paint (no flash). Stored choice: light | dark | system.
+       ?theme=light|dark|system overrides it for one page load without saving (screenshots). */
+    (function () {
+      var pref = "system";
+      try { pref = localStorage.getItem("auditlens.theme") || "system"; } catch (e) {}
+      var q = new URLSearchParams(location.search).get("theme");
+      if (q === "light" || q === "dark" || q === "system") pref = q;
+      var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      document.documentElement.dataset.themePref = pref;
+      document.documentElement.dataset.theme = pref === "system" ? (dark ? "dark" : "light") : pref;
+    })();
+  </script>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234c8dff' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath d='M15.5 15.5 21 21'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">A</div>
+        <div>
+          <div class="brand-name">AuditLens</div>
+          <div class="brand-sub">Powered by Slither</div>
+        </div>
+      </div>
+      <nav class="nav" id="nav">
+        <button class="nav-item active" data-view="overview"><span class="ico">◧</span> Overview</button>
+        <button class="nav-item" data-view="scan"><span class="ico">＋</span> New Scan</button>
+        <button class="nav-item" data-view="findings"><span class="ico">⚑</span> Findings <span class="badge" id="nav-findings">0</span></button>
+        <button class="nav-item" data-view="paths"><span class="ico">⇄</span> Attack Paths <span class="badge" id="nav-paths">0</span></button>
+        <button class="nav-item" data-view="verify"><span class="ico">✓</span> Verification</button>
+        <button class="nav-item" data-view="remediate"><span class="ico">⚒</span> Remediation</button>
+        <button class="nav-item" data-view="source"><span class="ico">{ }</span> Source</button>
+        <button class="nav-item" data-view="report"><span class="ico">▤</span> Report</button>
+        <button class="nav-item" data-view="scans"><span class="ico">≡</span> Scans</button>
+      </nav>
+      <div class="sr-only" id="announcer" aria-live="polite"></div>
+      <div class="sidebar-foot">
+        Static · AI · Execution · Remediation<br>Deterministic core by Slither
+      </div>
+    </aside>
+
+    <header class="topbar">
+      <div class="project" id="project-name">No contract loaded <small id="project-file"></small></div>
+      <div class="spacer"></div>
+      <div class="pill" id="scan-status"><span class="dot"></span> <span>Idle</span></div>
+      <div class="pill" id="ai-status"><span class="dot"></span> <span>AI: heuristic</span></div>
+      <div class="theme-switch" id="theme-switch" role="radiogroup" aria-label="Appearance"></div>
+    </header>
+
+    <main class="main" id="main"></main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>
